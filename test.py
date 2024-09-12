@@ -1,11 +1,11 @@
 import flet as ft
 import pyperclip
 from gvcode import VFCode
-import data_encrypto as de
+import data_encrypt as de
 import database_op as db
 
 
-# 登录页面
+# 登录页面对象
 class LoginPage(ft.Column):
     def __init__(self):
         super().__init__()
@@ -22,7 +22,7 @@ class LoginPage(ft.Column):
                                 letter_spacing=25,
                                 foreground=ft.Paint(
                                     color="#0C6CC9",
-                                    stroke_width=6,
+                                    stroke_width=8,
                                     stroke_join=ft.StrokeJoin.ROUND,
                                     style=ft.PaintingStyle.STROKE,
                                 ),
@@ -156,7 +156,9 @@ class LoginPage(ft.Column):
             password = db.query_user(db.conn, self.username_box.value)
             if password is not None:
                 if password == de.sha3_256(self.password_box.value):
-                    main_page(self.page)
+                    current_user = self.username_box.value
+                    current_key = self.password_box.value
+                    main_page(self.page, current_user, current_key)
                 else:
                     self.page.overlay.append(self.w_pwd_dlg)
                     self.w_pwd_dlg.open = True
@@ -171,7 +173,7 @@ class LoginPage(ft.Column):
         Register_page(self.page)
 
 
-# 注册界面对象
+# 注册页面对象
 class RegisterPage(ft.Column):
     def __init__(self):
         super().__init__()
@@ -334,11 +336,15 @@ class RegisterPage(ft.Column):
         main(self.page)
 
 
-
 # 添加密码信息弹窗对象
 class AddPwdDialog(ft.AlertDialog):
-    def __init__(self):
+    def __init__(self, current_user, current_key, pwd_table_rows, delete_pwd_row, copy_cell):
         super().__init__()
+        self.current_user = current_user
+        self.current_key = current_key
+        self.pwd_table_rows = pwd_table_rows
+        self.delete_pwd_row = delete_pwd_row
+        self.copy_cell = copy_cell
         self.title = ft.Text("添加新密码信息", color="#043D79")
         self.content = ft.Column(
             [
@@ -348,6 +354,7 @@ class AddPwdDialog(ft.AlertDialog):
                     max_lines=1,
                     width=500,
                     height=55,
+                    autofocus=True,
                 ),
                 ft.TextField(
                     label="账号",
@@ -394,6 +401,11 @@ class AddPwdDialog(ft.AlertDialog):
             alignment=ft.MainAxisAlignment.CENTER
         )
         self.actions = [
+            ft.IconButton(
+                icon=ft.icons.KEY_ROUNDED,
+                tooltip="随机生成强密码",
+                on_click=self.add_random_pwd,
+            ),
             ft.OutlinedButton(
                 text="保存",
                 on_click=self.add_pwn_dlg_save
@@ -404,6 +416,12 @@ class AddPwdDialog(ft.AlertDialog):
             ),
         ]
 
+    # 随机生成强密码
+    def add_random_pwd(self, e):
+        random_pwd = de.random_password(16)
+        self.content.controls[2].value = random_pwd
+        self.page.update()
+    
     # 添加密码信息弹窗取消按钮
     def add_pwn_dlg_cancel(self, e):
         self.page.close(self)
@@ -413,18 +431,54 @@ class AddPwdDialog(ft.AlertDialog):
         self.page.close(self)
         self.update()
         # 获取输入框信息
-        name = self.content.controls[0].value
+        website_name = self.content.controls[0].value
         account = self.content.controls[1].value
         password = self.content.controls[2].value
-        url = self.content.controls[3].value
-        remark = self.content.controls[4].value
-        encrypto = self.content.controls[5].value
+        website = self.content.controls[3].value
+        note = self.content.controls[4].value
+        encrypted_method = self.content.controls[5].value
+        # 验证是否为空
+        if website_name == "" or account == "" or password == "" or encrypted_method == "":
+            add_pwd_error_dlg = ft.AlertDialog(
+                title=ft.Text("添加失败", color="#043D79"),
+                content=ft.Text("请检查你的输入信息是否正确!"),
+            )
+            self.page.overlay.append(add_pwd_error_dlg)
+            add_pwd_error_dlg.open = True
+            self.page.update()
+            return
+        # 数据加密
+        password_encrypted = de.data_encrypt(password, de.sha_256(self.current_key), encrypted_method)
+        # 数据库操作
+        status = db.insert_password(db.conn, self.current_user, website_name, website, account, password_encrypted, encrypted_method, note)
+        # 取出最新添加的密码的创建时间
+        if status == 1:
+            created_at = db.query_password_created_at(db.conn, self.current_user, website_name, account)
+            pwd_info = PwdRow(
+                cells=[
+                    ft.DataCell(ft.Text(f"{website_name}"), on_tap=self.copy_cell),
+                    ft.DataCell(ft.Text(f"{account}"), on_tap=self.copy_cell),
+                    ft.DataCell(ft.Text(f"{password}"), on_tap=self.copy_cell),
+                    ft.DataCell(ft.Text(f"{website}"), on_tap=self.copy_cell),
+                    ft.DataCell(ft.Text(f"{note}"), on_tap=self.copy_cell),
+                    ft.DataCell(ft.Text(f"{created_at}"), on_tap=self.copy_cell),
+                ],
+                delete_pwd_row=self.delete_pwd_row
+            )
+            self.pwd_table_rows.append(pwd_info)
+            self.page.update()
+        else:
+            add_pwd_error_dlg = ft.AlertDialog(
+                title=ft.Text("添加失败", color="#043D79"),
+                content=ft.Text("请检查你的输入信息是否正确!"),
+            )
+            self.page.overlay.append(add_pwd_error_dlg)
+            add_pwd_error_dlg.open = True
+            self.page.update()
+            
 
-        # TODO 数据库操作
-        print(name, account, password, url, remark, encrypto)
 
-
-# 密码信息
+# 密码信息对象
 class PwdRow(ft.DataRow):
     def __init__(self, cells, delete_pwd_row):
         super().__init__(cells)
@@ -470,11 +524,12 @@ class PwdRow(ft.DataRow):
         self.delete_pwd_row(self)
 
 
-# 主页面
+# 主页面对象
 class MainPage(ft.Column):
-    def __init__(self):
+    def __init__(self, current_user, current_key):
         super().__init__()
-
+        self.current_user = current_user
+        self.current_key = current_key
         # 添加密码按钮
         self.btn_add_pwd = ft.IconButton(
             icon=ft.icons.ADD_CIRCLE,
@@ -520,7 +575,7 @@ class MainPage(ft.Column):
             bgcolor='#44C0DDEE',
             border_radius=20,
             heading_text_style=ft.TextStyle(color="#043D79", weight=ft.FontWeight.BOLD, size=16),
-            column_spacing=10,
+            # column_spacing=20,
             columns=[
                 ft.DataColumn(ft.Text("名称")),
                 ft.DataColumn(ft.Text("账号")),
@@ -569,15 +624,18 @@ class MainPage(ft.Column):
 
         # 自动创建密码信息对象
         # 数据库查询用户所有数据
-        for i in range(10):
+        pwd_list = db.query_password(db.conn, self.current_user)
+        for pwd in pwd_list:
+            key = de.sha_256(self.current_key)
+            password = de.data_decrypt(pwd['password_encrypted'], key, pwd['encrypted_method'])
             pwd_info = PwdRow(
                 cells=[
-                    ft.DataCell(ft.Text("John John John"), on_tap=self.copy_cell),
-                    ft.DataCell(ft.Text("Smith Smith Smith"), on_tap=self.copy_cell),
-                    ft.DataCell(ft.Text("1234567890123456789"), on_tap=self.copy_cell),
-                    ft.DataCell(ft.Text("1234567890123456789"), on_tap=self.copy_cell),
-                    ft.DataCell(ft.Text("1234567890123456789"), on_tap=self.copy_cell),
-                    ft.DataCell(ft.Text("1234567890123456789"), on_tap=self.copy_cell),
+                    ft.DataCell(ft.Text(f"{pwd['website_name']}"), on_tap=self.copy_cell),
+                    ft.DataCell(ft.Text(f"{pwd['account']}"), on_tap=self.copy_cell),
+                    ft.DataCell(ft.Text(f"{password}"), on_tap=self.copy_cell),
+                    ft.DataCell(ft.Text(f"{pwd['website']}"), on_tap=self.copy_cell),
+                    ft.DataCell(ft.Text(f"{pwd['note']}"), on_tap=self.copy_cell),
+                    ft.DataCell(ft.Text(f"{pwd['created_at']}"), on_tap=self.copy_cell),
                 ],
                 delete_pwd_row=self.delete_pwd_row
             )
@@ -586,7 +644,7 @@ class MainPage(ft.Column):
     # 添加密码按钮点击事件
     def btn_add_pwd_click(self, e):
         # 创建添加密码信息弹窗对象
-        add_pwd_dlg = AddPwdDialog()
+        add_pwd_dlg = AddPwdDialog(self.current_user, self.current_key, self.pwd_table.rows, self.delete_pwd_row, self.copy_cell)
         self.page.overlay.append(add_pwd_dlg)
         add_pwd_dlg.open = True
         self.page.update()
@@ -597,8 +655,21 @@ class MainPage(ft.Column):
 
     # 删除密码表格信息
     def delete_pwd_row(self, pwd_row):
-        self.pwd_table.rows.remove(pwd_row)
-        self.update()
+        # 数据库操作
+        website_name = pwd_row.cells[0].content.value
+        account = pwd_row.cells[1].content.value
+        status = db.delete_password(db.conn, self.current_user, website_name, account)
+        if status == 1:
+            self.pwd_table.rows.remove(pwd_row)
+            self.update()
+        else:
+            del_pwd_error_dlg = ft.AlertDialog(
+                title=ft.Text("删除失败", color="#043D79"),
+                content=ft.Text("请检查你的操作是否正确!"),
+            )
+            self.page.overlay.append(del_pwd_error_dlg)
+            del_pwd_error_dlg.open = True
+            self.page.update()
 
     # 复制单元格内容
     def copy_cell(self, e):
@@ -618,7 +689,7 @@ class MainPage(ft.Column):
 
 
 # 主页面
-def main_page(page):
+def main_page(page, current_user, current_key):
     page.clean()
     # page.vertical_alignment = ft.MainAxisAlignment.CENTER  # 垂直居中
     page.window.height = 700
@@ -626,7 +697,7 @@ def main_page(page):
     page.window.width = 1200
     page.window.min_width = 1200
     page.window.center()
-    page.add(MainPage())
+    page.add(MainPage(current_user, current_key))
     page.update()
     page.on_disconnect = lambda: db.close_connection(db.conn)
 
@@ -658,8 +729,8 @@ def main(page: ft.Page):
     page.scroll = "AUTO"
     page.window.center()
     page.theme_mode = ft.ThemeMode.LIGHT
-    page.theme = ft.theme.Theme(color_scheme_seed='blue', font_family='Alibaba')
-    page.fonts = {'Alibaba': '/fonts/AlibabaPuHuiTi.ttf'}
+    page.theme = ft.theme.Theme(color_scheme_seed='blue', font_family='source')
+    page.fonts = {'source': 'https://www.unpkg.com/font-online/fonts/SourceHanSans/SourceHanSans-Normal.otf'}
     page.vertical_alignment = ft.MainAxisAlignment.CENTER  # 垂直居中
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER  # 水平居中
 

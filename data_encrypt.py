@@ -123,3 +123,25 @@ def random_password(length):
     password = ''.join(secrets.choice(alphabet) for i in range(length))
     return password
 
+# 数据加密接口
+def data_encrypt(data, key, algorithm):
+    if algorithm == 'AES-256':
+        return aes_encrypt(data, key)
+    elif algorithm == 'ChaCha20':
+        return chacha20_encrypt(data, key)
+    elif algorithm == 'XChaCha20':
+        return xchacha20_encrypt(data, key)
+    else:
+        return None
+    
+# 数据解密接口 
+def data_decrypt(data, key, algorithm):
+    if algorithm == 'AES-256':
+        return aes_decrypt(data, key)
+    elif algorithm == 'ChaCha20':
+        return chacha20_decrypt(data, key)
+    elif algorithm == 'XChaCha20':
+        return xchacha20_decrypt(data, key)
+    else:
+        return None
+    
