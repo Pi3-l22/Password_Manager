@@ -17,7 +17,7 @@ class LoginPage(ft.Column):
                         ft.TextSpan(
                             "密码管理器",
                             ft.TextStyle(
-                                size=40,
+                                size=50,
                                 weight=ft.FontWeight.BOLD,
                                 letter_spacing=25,
                                 foreground=ft.Paint(
@@ -35,7 +35,7 @@ class LoginPage(ft.Column):
                         ft.TextSpan(
                             "密码管理器",
                             ft.TextStyle(
-                                size=40,
+                                size=50,
                                 weight=ft.FontWeight.BOLD,
                                 letter_spacing=25,
                                 color="#EDF5F8",
@@ -105,51 +105,6 @@ class LoginPage(ft.Column):
             content=ft.Text("请输入你的用户名和密码!"),
         )
 
-        # 注册事件错误弹窗
-        self.w_register_dlg = ft.AlertDialog(
-            title=ft.Text("注册失败", color="#043D79"),
-            content=ft.Text("请重新输入用户名和密码！"),
-        )
-        self.w_vf_code_dlg = ft.AlertDialog(
-            title=ft.Text("验证码错误", color="#043D79"),
-            content=ft.Text("请重新输入验证码！"),
-        )
-
-        # 注册验证码弹窗
-        self.vf_code_dlg = ft.AlertDialog(
-            title=ft.Text("验证码", color="#043D79"),
-            content=ft.Row(
-                [
-                    ft.TextField(
-                        label="验证码",
-                        hint_text="请输入验证码",
-                        max_lines=1,
-                        width=100,
-                        height=40,
-                    ),
-                    ft.Image(
-                        src="register_code.png",
-                        width=100,
-                        height=40,
-                    ),
-                ]
-            ),
-            actions=[
-                ft.OutlinedButton(
-                    text="确定",
-                    on_click=self.vf_code_dlg_confirm
-                ),
-                ft.OutlinedButton(
-                    text="取消",
-                    on_click=self.vf_code_dlg_cancel
-                ),
-            ]
-        )
-        # 注册成功弹窗
-        self.w_register_success_dlg = ft.AlertDialog(
-            title=ft.Text("注册成功", color="#043D79"),
-        )
-
         # 添加控件
         self.controls = [
             ft.Row(
@@ -213,53 +168,171 @@ class LoginPage(ft.Column):
 
     # 注册按钮点击事件
     def btn_register_click(self, e):
+        Register_page(self.page)
+
+
+# 注册界面对象
+class RegisterPage(ft.Column):
+    def __init__(self):
+        super().__init__()
+        # 生成验证码
+        vc = VFCode()
+        vc.generate_digit(4)
+        self.code = vc.code
+        vc.save(f"{self.code}.png")
+        # 标题
+        self.title = ft.Text("注册用户", color='#043D79', size=40, weight=ft.FontWeight.BOLD)
+        # 用户名和密码输入框
+        self.password_box = ft.TextField(
+            label="主密码",
+            hint_text="请输入你的主密码",
+            max_lines=1,
+            width=350,
+            height=55,
+            password=True,
+            can_reveal_password=True,
+            keyboard_type=ft.KeyboardType.VISIBLE_PASSWORD,
+            shift_enter=True,
+            on_submit=self.register_click
+        )
+        self.username_box = ft.TextField(
+            label="用户名",
+            hint_text="请输入你的用户名",
+            max_lines=1,
+            width=350,
+            height=55,
+            autofocus=True,
+            shift_enter=True,
+            on_submit=lambda e: self.password_box.focus(),
+        )
+        # 验证码
+        self.vf_code = ft.Row(
+            [
+                ft.TextField(
+                    label="验证码",
+                    max_lines=1,
+                    width=200,
+                    height=50,
+                ),
+                ft.Image(
+                    src=f"{self.code}.png",
+                    width=125,
+                    height=50,
+                ),
+            ],
+            spacing=25
+        )
+        # 登录和注册按钮
+        self.btn_cancel = ft.OutlinedButton(
+            text="取消",
+            width=150,
+            height=50,
+            animate_size=True,
+            on_click=self.cancel_click,
+            icon=ft.icons.CANCEL_OUTLINED,
+        )
+        self.btn_register = ft.OutlinedButton(
+            text="注册",
+            width=150,
+            height=50,
+            animate_size=True,
+            on_click=self.register_click,
+            icon=ft.icons.PERSON_ADD_ALT,
+        )
+
+        # 添加控件
+        self.controls = [
+            ft.Row(
+                [
+                    self.title,
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+            ),
+            ft.Row(
+                [
+                    self.username_box,
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+            ),
+            ft.Row(
+                [
+                    self.password_box,
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+            ),
+            ft.Row(
+                [
+                    self.vf_code,
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+            ),
+            ft.Row(
+                [
+                    self.btn_register,
+                    self.btn_cancel,
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+                spacing=50,
+            ),
+        ]
+        self.spacing = 25
+        
+        # 注册事件错误弹窗
+        self.w_register_dlg = ft.AlertDialog(
+            title=ft.Text("用户名已存在", color="#043D79"),
+            content=ft.Text("请重新输入用户名！"),
+        )
+        self.w_vf_code_dlg = ft.AlertDialog(
+            title=ft.Text("验证码错误", color="#043D79"),
+            content=ft.Text("请重新输入验证码！"),
+        )
+        self.w_no_user_dlg = ft.AlertDialog(
+            title=ft.Text("用户名和密码为空", color="#043D79"),
+            content=ft.Text("请输入用户名和密码！"),
+        )
+        # 注册成功弹窗
+        self.register_success_dlg = ft.AlertDialog(
+            title=ft.Text("注册成功", color="#043D79"),
+            content=ft.Text("请继续完成登录操作"),
+        )
+
+    # 注册按钮事件
+    def register_click(self, e):
         if self.username_box.value == "" or self.password_box.value == "":
             self.page.overlay.append(self.w_no_user_dlg)
             self.w_no_user_dlg.open = True
             self.page.update()
         else:
-            # 数据库操作
-            password = db.query_user(db.conn, self.username_box.value)
-            if password is None:
-                # 生成验证码
-                vc = VFCode()
-                vc.generate_mix(4)
-                vc.save("register_code.png")
-                self.code = vc.code
-                # 验证码弹窗
-                self.page.overlay.append(self.vf_code_dlg)
-                self.vf_code_dlg.open = True
+            if self.vf_code.controls[0].value != self.code:
+                self.page.overlay.append(self.w_vf_code_dlg)
+                self.w_vf_code_dlg.open = True
                 self.page.update()
             else:
-                self.page.overlay.append(self.w_register_dlg)
-                self.w_register_dlg = True
-                self.page.update()
+                # 数据库操作
+                password = db.query_user(db.conn, self.username_box.value)
+                if password is None:
+                    db.insert_user(db.conn, self.username_box.value, de.sha3_256(self.password_box.value))
+                    self.page.overlay.append(self.register_success_dlg)
+                    self.register_success_dlg.open = True
+                    self.page.update()
+                    main(self.page)
+                    # 删除验证码图片
+                    import os
+                    if os.path.exists(f"{self.code}.png"):
+                        os.remove(f"{self.code}.png")
+                else:
+                    self.page.overlay.append(self.w_register_dlg)
+                    self.w_register_dlg.open = True
+                    self.page.update()
 
-    # 注册验证码弹窗确定按钮
-    def vf_code_dlg_confirm(self, e):
-        # 验证验证码
-        if self.vf_code_dlg.content.controls[0].value == self.code:
-            # 数据库操作
-            if db.insert_user(db.conn, self.username_box.value, de.sha3_256(self.password_box.value)) == 1:
-                self.page.close(self.vf_code_dlg)
-                self.page.overlay.append(self.w_register_success_dlg)
-                self.w_register_success_dlg.open = True
-                self.page.update()
-            else:
-                self.page.close(self.vf_code_dlg)
-                self.page.overlay.append(self.w_register_dlg)
-                self.w_register_dlg = True
-                self.page.update()
-        else:
-            self.page.close(self.vf_code_dlg)
-            self.page.overlay.append(self.w_vf_code_dlg)
-            self.w_vf_code_dlg.open = True
-            self.page.update()
+    # 取消按钮事件
+    def cancel_click(self, e):
+        # 删除验证码图片
+        import os
+        if os.path.exists(f"{self.code}.png"):
+            os.remove(f"{self.code}.png")
+        main(self.page)
 
-    # 注册验证码弹窗取消按钮
-    def vf_code_dlg_cancel(self, e):
-        self.page.close(self.vf_code_dlg)
-        self.page.update()
 
 
 # 添加密码信息弹窗对象
@@ -557,9 +630,22 @@ def main_page(page):
     page.update()
     page.on_disconnect = lambda: db.close_connection(db.conn)
 
+# 注册界面
+def Register_page(page):
+    page.clean()
+    page.window.width = 600
+    page.window.height = 500
+    page.window.min_width = 600
+    page.window.min_height = 500
+    # page.window.center()
+    page.add(RegisterPage())
+    page.update()
+    page.on_disconnect = lambda: db.close_connection(db.conn)
+    
 
 # 登录页面
 def main(page: ft.Page):
+    page.clean()
     page.title = "密码管理器"
     page.window.bgcolor = ft.colors.TRANSPARENT
     page.bgcolor = "#f0f0f0"
@@ -584,3 +670,6 @@ def main(page: ft.Page):
 
 
 ft.app(target=main, assets_dir="asset")
+
+# 如果退出页面，关闭数据库连接
+db.close_connection(db.conn)
