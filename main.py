@@ -5,7 +5,7 @@ import data_encrypt as de
 import database_op as db
 
 
-# 登录页面对象
+# 登录页面类
 class LoginPage(ft.Column):
     def __init__(self):
         super().__init__()
@@ -173,7 +173,7 @@ class LoginPage(ft.Column):
         Register_page(self.page)
 
 
-# 注册页面对象
+# 注册页面类
 class RegisterPage(ft.Column):
     def __init__(self):
         super().__init__()
@@ -336,7 +336,7 @@ class RegisterPage(ft.Column):
         main(self.page)
 
 
-# 添加密码信息弹窗对象
+# 添加密码信息弹窗类
 class AddPwdDialog(ft.AlertDialog):
     def __init__(self, current_user, current_key, pwd_table_rows, delete_pwd_row, copy_cell):
         super().__init__()
@@ -345,6 +345,7 @@ class AddPwdDialog(ft.AlertDialog):
         self.pwd_table_rows = pwd_table_rows
         self.delete_pwd_row = delete_pwd_row
         self.copy_cell = copy_cell
+        self.modal = True
         self.title = ft.Text("添加新密码信息", color="#043D79")
         self.content = ft.Column(
             [
@@ -479,7 +480,7 @@ class AddPwdDialog(ft.AlertDialog):
             self.page.update()
 
 
-# 密码信息对象
+# 密码信息类
 class PwdRow(ft.DataRow):
     def __init__(self, cells, delete_pwd_row):
         super().__init__(cells)
@@ -527,8 +528,9 @@ class PwdRow(ft.DataRow):
 
 # 主页面对象
 class MainPage(ft.Column):
-    def __init__(self, current_user, current_key):
+    def __init__(self, current_user, current_key, page):
         super().__init__()
+        self.page2 = page
         self.current_user = current_user
         self.current_key = current_key
         # 添加密码按钮
@@ -626,21 +628,22 @@ class MainPage(ft.Column):
         # 自动创建密码信息对象
         # 数据库查询用户所有数据
         pwd_list = db.query_password(db.conn, self.current_user)
-        for pwd in pwd_list:
-            key = de.sha_256(self.current_key)
-            password = de.data_decrypt(pwd['password_encrypted'], key, pwd['encrypted_method'])
-            pwd_info = PwdRow(
-                cells=[
-                    ft.DataCell(ft.Text(f"{pwd['website_name']}"), on_tap=self.copy_cell),
-                    ft.DataCell(ft.Text(f"{pwd['account']}"), on_tap=self.copy_cell),
-                    ft.DataCell(ft.Text(f"{password}"), on_tap=self.copy_cell),
-                    ft.DataCell(ft.Text(f"{pwd['website']}"), on_tap=self.copy_cell),
-                    ft.DataCell(ft.Text(f"{pwd['note']}"), on_tap=self.copy_cell),
-                    ft.DataCell(ft.Text(f"{pwd['created_at']}"), on_tap=self.copy_cell),
-                ],
-                delete_pwd_row=self.delete_pwd_row
-            )
-            self.pwd_table.rows.append(pwd_info)
+        if pwd_list is not None:
+            for pwd in pwd_list:
+                key = de.sha_256(self.current_key)
+                password = de.data_decrypt(pwd['password_encrypted'], key, pwd['encrypted_method'])
+                pwd_info = PwdRow(
+                    cells=[
+                        ft.DataCell(ft.Text(f"{pwd['website_name']}"), on_tap=self.copy_cell),
+                        ft.DataCell(ft.Text(f"{pwd['account']}"), on_tap=self.copy_cell),
+                        ft.DataCell(ft.Text(f"{password}"), on_tap=self.copy_cell),
+                        ft.DataCell(ft.Text(f"{pwd['website']}"), on_tap=self.copy_cell),
+                        ft.DataCell(ft.Text(f"{pwd['note']}"), on_tap=self.copy_cell),
+                        ft.DataCell(ft.Text(f"{pwd['created_at']}"), on_tap=self.copy_cell),
+                    ],
+                    delete_pwd_row=self.delete_pwd_row
+                )
+                self.pwd_table.rows.append(pwd_info)
 
             # 密码数据导入文件路径
             self.local_file_path = ""
@@ -650,6 +653,7 @@ class MainPage(ft.Column):
             self.get_directory_dialog = ft.FilePicker(on_result=self.get_directory_result)
             # 文件选择弹窗
             self.pick_files_dialog = ft.FilePicker(on_result=self.pick_files_result)
+            self.page2.overlay.extend([self.get_directory_dialog, self.pick_files_dialog])
             # 底部信息弹窗
             self.info_snack_bar = ft.SnackBar(ft.Text(), duration=2000)
             # 导出密码信息弹窗
@@ -702,7 +706,7 @@ class MainPage(ft.Column):
                         on_click=self.export_pwd_dlg_cancel
                     ),
                 ],
-                on_dismiss=self.export_pwd_dlg_close
+                modal=True
             )
             # 导入密码信息弹窗
             self.choose_import_dlg = ft.AlertDialog(
@@ -743,7 +747,7 @@ class MainPage(ft.Column):
                         on_click=self.import_pwd_dlg_cancel
                     ),
                 ],
-                on_dismiss=self.import_pwd_dlg_close
+                modal=True
             )
 
     # 添加密码按钮点击事件
@@ -815,7 +819,7 @@ class MainPage(ft.Column):
 
     # 导出密码点击事件
     def export_pwd_click(self, e):
-        self.page.overlay.extend([self.get_directory_dialog])
+        # self.page.overlay.append(self.get_directory_dialog)
         self.page.overlay.append(self.choose_export_dlg)
         self.choose_export_dlg.open = True
         self.page.update()
@@ -840,6 +844,7 @@ class MainPage(ft.Column):
                 self.page.update()
             else:
                 self.page.close(self.choose_export_dlg)
+                self.page.overlay.remove(self.choose_export_dlg)
                 # 清除变量
                 self.local_dir_path = ""
                 self.choose_export_dlg.content.controls[0].controls[0].value = ""
@@ -851,14 +856,9 @@ class MainPage(ft.Column):
 
     # 导出密码信息弹窗取消按钮
     def export_pwd_dlg_cancel(self, e):
+        # self.page.overlay.remove(self.get_directory_dialog)
         self.page.close(self.choose_export_dlg)
-        # 清除变量
-        self.local_dir_path = ""
-        self.choose_export_dlg.content.controls[0].controls[0].value = ""
-        self.choose_export_dlg.content.controls[1].value = ""
-
-    # 关闭导出密码信息弹窗
-    def export_pwd_dlg_close(self, e):
+        self.page.overlay.remove(self.choose_export_dlg)
         # 清除变量
         self.local_dir_path = ""
         self.choose_export_dlg.content.controls[0].controls[0].value = ""
@@ -878,7 +878,7 @@ class MainPage(ft.Column):
 
     # 导入密码点击事件
     def import_pwd_click(self, e):
-        self.page.overlay.extend([self.pick_files_dialog])
+        # self.page.overlay.append(self.pick_files_dialog)
         self.page.overlay.append(self.choose_import_dlg)
         self.choose_import_dlg.open = True
         self.page.update()
@@ -913,7 +913,8 @@ class MainPage(ft.Column):
                 flag = db.insert_password(db.conn, self.current_user, pwd_info['website_name'], pwd_info['website'],
                                           pwd_info['account'], pwd_info['password_encrypted'],
                                           pwd_info['encrypted_method'], pwd_info['note'])
-                created_time = db.query_password_created_at(db.conn, self.current_user, pwd_info['website_name'], pwd_info['account'])
+                created_time = db.query_password_created_at(db.conn, self.current_user, pwd_info['website_name'],
+                                                            pwd_info['account'])
                 if flag == 1:
                     ok_count += 1
                     pwn_row = PwdRow(
@@ -931,6 +932,7 @@ class MainPage(ft.Column):
                 else:
                     error_count += 1
             self.page.close(self.choose_import_dlg)
+            self.page.overlay.remove(self.choose_import_dlg)  # BUG
             # 清除变量
             self.local_file_path = ""
             self.choose_import_dlg.content.controls[0].controls[0].value = ""
@@ -941,20 +943,16 @@ class MainPage(ft.Column):
 
     # 导入密码信息弹窗取消按钮
     def import_pwd_dlg_cancel(self, e):
+        # self.page.overlay.remove(self.pick_files_dialog)
         self.page.close(self.choose_import_dlg)
-        # 清除变量
-        self.local_file_path = ""
-        self.choose_import_dlg.content.controls[0].controls[0].value = ""
-
-    # 关闭导入密码信息弹窗
-    def import_pwd_dlg_close(self, e):
+        self.page.overlay.remove(self.choose_import_dlg)
         # 清除变量
         self.local_file_path = ""
         self.choose_import_dlg.content.controls[0].controls[0].value = ""
 
     # 文件选择结果
     def pick_files_result(self, e: ft.FilePickerResultEvent):
-        if e.files[0].path is None:
+        if e.files is None:
             self.info_snack_bar.content.value = "请选择一个文件!"
             self.page.overlay.append(self.info_snack_bar)
             self.info_snack_bar.open = True
@@ -974,7 +972,7 @@ def main_page(page, current_user, current_key):
     page.window.width = 1200
     page.window.min_width = 1200
     page.window.center()
-    page.add(MainPage(current_user, current_key))
+    page.add(MainPage(current_user, current_key, page))
     page.update()
     page.on_disconnect = lambda: db.close_connection(db.conn)
 
