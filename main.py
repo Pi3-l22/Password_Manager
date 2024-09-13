@@ -720,7 +720,7 @@ class MainPage(ft.Column):
                                     autofocus=True,
                                 ),
                                 ft.IconButton(
-                                    icon=ft.icons.UPLOAD_FILE,
+                                    icon=ft.icons.FILE_PRESENT_ROUNDED,
                                     icon_size=40,
                                     on_click=lambda _: self.pick_files_dialog.pick_files(allow_multiple=False),
                                 )
@@ -760,7 +760,7 @@ class MainPage(ft.Column):
         keywords = self.search_box.value
         # 数据库操作
         pwd_list = db.search_password(db.conn, self.current_user, keywords)
-        if pwd_list != None:
+        if pwd_list is not None:
             self.pwd_table.rows.clear()
             for pwd in pwd_list:
                 key = de.sha_256(self.current_key)
@@ -839,6 +839,11 @@ class MainPage(ft.Column):
                 self.info_snack_bar.open = True
                 self.page.update()
             else:
+                self.page.close(self.choose_export_dlg)
+                # 清除变量
+                self.local_dir_path = ""
+                self.choose_export_dlg.content.controls[0].controls[0].value = ""
+                self.choose_export_dlg.content.controls[1].value = ""
                 self.info_snack_bar.content.value = "导出成功!"
                 self.page.overlay.append(self.info_snack_bar)
                 self.info_snack_bar.open = True
@@ -887,17 +892,52 @@ class MainPage(ft.Column):
             self.page.update()
             return
         else:
-            status = 1
-            if status == -1:
-                self.info_snack_bar.content.value = "导入失败!"
+            # 拆分文件后缀
+            file_suffix = self.local_file_path.split(".")[-1].upper()
+            if file_suffix != "JSON" and file_suffix != "CSV" and file_suffix != "TXT":
+                self.info_snack_bar.content.value = "文件格式错误!只支持JSON、CSV、TXT格式文件!"
                 self.page.overlay.append(self.info_snack_bar)
                 self.info_snack_bar.open = True
                 self.page.update()
-            else:
-                self.info_snack_bar.content.value = "导入成功!"
+                return
+            ok_count = 0
+            error_count = 0
+            pwd_list = de.import_password(self.current_user, self.current_key, self.local_file_path, file_suffix)
+            if pwd_list == -1:
+                self.info_snack_bar.content.value = "导入失败!文件格式错误!"
                 self.page.overlay.append(self.info_snack_bar)
                 self.info_snack_bar.open = True
                 self.page.update()
+                return
+            for pwd_info in pwd_list:
+                flag = db.insert_password(db.conn, self.current_user, pwd_info['website_name'], pwd_info['website'],
+                                          pwd_info['account'], pwd_info['password_encrypted'],
+                                          pwd_info['encrypted_method'], pwd_info['note'])
+                created_time = db.query_password_created_at(db.conn, self.current_user, pwd_info['website_name'], pwd_info['account'])
+                if flag == 1:
+                    ok_count += 1
+                    pwn_row = PwdRow(
+                        cells=[
+                            ft.DataCell(ft.Text(f"{pwd_info['website_name']}"), on_tap=self.copy_cell),
+                            ft.DataCell(ft.Text(f"{pwd_info['account']}"), on_tap=self.copy_cell),
+                            ft.DataCell(ft.Text(f"{pwd_info['password_encrypted']}"), on_tap=self.copy_cell),
+                            ft.DataCell(ft.Text(f"{pwd_info['website']}"), on_tap=self.copy_cell),
+                            ft.DataCell(ft.Text(f"{pwd_info['note']}"), on_tap=self.copy_cell),
+                            ft.DataCell(ft.Text(f"{created_time}"), on_tap=self.copy_cell),
+                        ],
+                        delete_pwd_row=self.delete_pwd_row
+                    )
+                    self.pwd_table.rows.append(pwn_row)
+                else:
+                    error_count += 1
+            self.page.close(self.choose_import_dlg)
+            # 清除变量
+            self.local_file_path = ""
+            self.choose_import_dlg.content.controls[0].controls[0].value = ""
+            self.info_snack_bar.content.value = f"导入成功: {ok_count} 条!   导入失败: {error_count} 条!"
+            self.page.overlay.append(self.info_snack_bar)
+            self.info_snack_bar.open = True
+            self.page.update()
 
     # 导入密码信息弹窗取消按钮
     def import_pwd_dlg_cancel(self, e):

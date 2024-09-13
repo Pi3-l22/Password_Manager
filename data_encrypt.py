@@ -251,7 +251,7 @@ def import_password_from_json(username, key, file_path):
                         'password_encrypted': data_encrypt(item['password'], key, item['encrypted_method']),
                         'encrypted_method': item['encrypted_method'],
                         'note': item['note'],
-                        'created_at': item['created_at']
+                        # 'created_at': item['created_at']
                     }
                 )
             return pwd_info_list
@@ -279,7 +279,7 @@ def import_password_from_csv(username, key, file_path):
                         'password_encrypted': data_encrypt(item[4], key, item[5]),
                         'encrypted_method': item[5],
                         'note': item[6],
-                        'created_at': item[7]
+                        # 'created_at': item[7]
                     }
                 )
             return pwd_info_list
@@ -305,7 +305,7 @@ def import_password_from_txt(username, key, file_path):
                         'password_encrypted': data_encrypt(data[i + 5].split(': ')[1].strip(), key, data[i + 6].split(': ')[1].strip()),
                         'encrypted_method': data[i + 6].split(': ')[1].strip(),
                         'note': data[i + 7].split(': ')[1].strip(),
-                        'created_at': data[i + 8].split(': ')[1].strip()
+                        # 'created_at': data[i + 8].split(': ')[1].strip()
                     }
                     if username != item['username']:
                         continue
@@ -313,4 +313,16 @@ def import_password_from_txt(username, key, file_path):
                     count += 1
             return pwd_info_list
     except Exception as e:
+        return ERROR
+
+
+# 导入数据接口
+def import_password(username, key, file_path, import_format):
+    if import_format == 'JSON':
+        return import_password_from_json(username, key, file_path)
+    elif import_format == 'CSV':
+        return import_password_from_csv(username, key, file_path)
+    elif import_format == 'TXT':
+        return import_password_from_txt(username, key, file_path)
+    else:
         return ERROR
