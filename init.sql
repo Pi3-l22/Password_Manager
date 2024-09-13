@@ -36,8 +36,8 @@ CREATE TABLE IF NOT EXISTS password (
 -- 创建例子数据
 INSERT INTO user (username, password_hash) VALUES ('admin', 'fb001dfcffd1c899f3297871406242f097aecf1a5342ccf3ebcd116146188e4b');
 INSERT INTO password (username, website_name, website, account, password_encrypted, encrypted_method, note) 
-    VALUES ('admin', 'github', 'https://github.com', 'admin', 'fb001dfcffd1c899f3297871406242f097aecf1a5342ccf3ebcd116146188e4b', 'AES-256', '使用AES-256加密');
+    VALUES ('admin', 'github', 'https://github.com', 'github_account', 'c397a131306195d62732b6dc6f806987f99265c35ae8b7a344c68f60df51df5938e8ca013125', 'AES-256', '使用AES-256加密');
 INSERT INTO password (username, website_name, website, account, password_encrypted, encrypted_method, note) 
-    VALUES ('admin', 'baidu', 'https://www.baidu.com', 'admin', 'fb001dfcffd1c899f3297871406242f097aecf1a5342ccf3ebcd116146188e4b', 'ChaCha20', '使用ChaCha20加密');
+    VALUES ('admin', 'baidu', 'https://www.baidu.com', 'baidu_account', '9c312737378ec4d374b9c05d20cf4b0340ab', 'ChaCha20', '使用ChaCha20加密');
 INSERT INTO password (username, website_name, website, account, password_encrypted, encrypted_method, note) 
-    VALUES ('admin', 'google', 'https://www.google.com', 'admin', 'fb001dfcffd1c899f3297871406242f097aecf1a5342ccf3ebcd116146188e4b', 'XChaCha20', '使用XChaCha20加密');
+    VALUES ('admin', 'google', 'https://www.google.com', 'google_account', '0e27e8028aa4fd92d0de5ae2da53fa06f5200af8bdacfda18bc04c7f1fbd', 'XChaCha20', '使用XChaCha20加密');

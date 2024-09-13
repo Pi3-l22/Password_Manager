@@ -1,3 +1,4 @@
 mysql~=0.0.3
 flet~=0.24.1
 pyperclip~=1.9.0
+gvcode~=1.0.3
