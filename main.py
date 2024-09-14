@@ -7,8 +7,9 @@ import database_op as db
 
 # 登录页面类
 class LoginPage(ft.Column):
-    def __init__(self):
+    def __init__(self, page):
         super().__init__()
+        self.page = page
         # 主标题
         self.title = ft.Stack(
             [
@@ -104,6 +105,8 @@ class LoginPage(ft.Column):
             title=ft.Text("用户名或密码为空", color="#043D79"),
             content=ft.Text("请输入你的用户名和密码!"),
         )
+        # 在页面上添加弹窗
+        self.page.overlay.extend([self.w_pwd_dlg, self.w_no_user_dlg])
 
         # 添加控件
         self.controls = [
@@ -148,7 +151,7 @@ class LoginPage(ft.Column):
     # 登录按钮点击事件
     def btn_login_click(self, e):
         if self.username_box.value == "" or self.password_box.value == "":
-            self.page.overlay.append(self.w_no_user_dlg)
+            # self.page.overlay.append(self.w_no_user_dlg)
             self.w_no_user_dlg.open = True
             self.page.update()
         else:
@@ -160,11 +163,11 @@ class LoginPage(ft.Column):
                     current_key = self.password_box.value
                     main_page(self.page, current_user, current_key)
                 else:
-                    self.page.overlay.append(self.w_pwd_dlg)
+                    # self.page.overlay.append(self.w_pwd_dlg)
                     self.w_pwd_dlg.open = True
                     self.page.update()
             else:
-                self.page.overlay.append(self.w_pwd_dlg)
+                # self.page.overlay.append(self.w_pwd_dlg)
                 self.w_pwd_dlg.open = True
                 self.page.update()
 
@@ -175,8 +178,9 @@ class LoginPage(ft.Column):
 
 # 注册页面类
 class RegisterPage(ft.Column):
-    def __init__(self):
+    def __init__(self, page):
         super().__init__()
+        self.page = page
         # 生成验证码
         vc = VFCode()
         vc.generate_digit(4)
@@ -297,16 +301,19 @@ class RegisterPage(ft.Column):
             title=ft.Text("注册成功", color="#043D79"),
             content=ft.Text("请继续完成登录操作"),
         )
+        # 在页面上添加弹窗
+        self.page.overlay.extend(
+            [self.w_register_dlg, self.w_vf_code_dlg, self.w_no_user_dlg, self.register_success_dlg])
 
     # 注册按钮事件
     def register_click(self, e):
         if self.username_box.value == "" or self.password_box.value == "":
-            self.page.overlay.append(self.w_no_user_dlg)
+            # self.page.overlay.append(self.w_no_user_dlg)
             self.w_no_user_dlg.open = True
             self.page.update()
         else:
             if self.vf_code.controls[0].value != self.code:
-                self.page.overlay.append(self.w_vf_code_dlg)
+                # self.page.overlay.append(self.w_vf_code_dlg)
                 self.w_vf_code_dlg.open = True
                 self.page.update()
             else:
@@ -314,7 +321,7 @@ class RegisterPage(ft.Column):
                 password = db.query_user(db.conn, self.username_box.value)
                 if password is None:
                     db.insert_user(db.conn, self.username_box.value, de.sha3_256(self.password_box.value))
-                    self.page.overlay.append(self.register_success_dlg)
+                    # self.page.overlay.append(self.register_success_dlg)
                     self.register_success_dlg.open = True
                     self.page.update()
                     main(self.page)
@@ -323,7 +330,7 @@ class RegisterPage(ft.Column):
                     if os.path.exists(f"{self.code}.png"):
                         os.remove(f"{self.code}.png")
                 else:
-                    self.page.overlay.append(self.w_register_dlg)
+                    # self.page.overlay.append(self.w_register_dlg)
                     self.w_register_dlg.open = True
                     self.page.update()
 
@@ -338,13 +345,14 @@ class RegisterPage(ft.Column):
 
 # 添加密码信息弹窗类
 class AddPwdDialog(ft.AlertDialog):
-    def __init__(self, current_user, current_key, pwd_table_rows, delete_pwd_row, copy_cell):
+    def __init__(self, current_user, current_key, pwd_table_rows, delete_pwd_row, copy_cell, info_snack_bar):
         super().__init__()
         self.current_user = current_user
         self.current_key = current_key
         self.pwd_table_rows = pwd_table_rows
         self.delete_pwd_row = delete_pwd_row
         self.copy_cell = copy_cell
+        self.info_snack_bar = info_snack_bar
         self.modal = True
         self.title = ft.Text("添加新密码信息", color="#043D79")
         self.content = ft.Column(
@@ -427,11 +435,10 @@ class AddPwdDialog(ft.AlertDialog):
     # 添加密码信息弹窗取消按钮
     def add_pwn_dlg_cancel(self, e):
         self.page.close(self)
+        self.page.overlay.remove(self)
 
     # 添加密码信息弹窗保存按钮
     def add_pwn_dlg_save(self, e):
-        self.page.close(self)
-        self.update()
         # 获取输入框信息
         website_name = self.content.controls[0].value
         account = self.content.controls[1].value
@@ -440,13 +447,11 @@ class AddPwdDialog(ft.AlertDialog):
         note = self.content.controls[4].value
         encrypted_method = self.content.controls[5].value
         # 验证是否为空
-        if website_name == "" or account == "" or password == "" or encrypted_method == "":
-            add_pwd_error_dlg = ft.AlertDialog(
-                title=ft.Text("添加失败", color="#043D79"),
-                content=ft.Text("请检查你的输入信息是否完整!"),
-            )
-            self.page.overlay.append(add_pwd_error_dlg)
-            add_pwd_error_dlg.open = True
+        if website_name == "" or account == "" or password == "" or encrypted_method == "" or website == "" or note == "":
+            self.info_snack_bar.content.value = "请填写完整信息!"
+            self.info_snack_bar.open = True
+            # self.page.close(self)
+            # self.page.overlay.remove(self)
             self.page.update()
             return
         # 数据加密
@@ -470,14 +475,14 @@ class AddPwdDialog(ft.AlertDialog):
             )
             self.pwd_table_rows.append(pwd_info)
             self.page.update()
+            self.page.close(self)
+            self.page.overlay.remove(self)
         else:
-            add_pwd_error_dlg = ft.AlertDialog(
-                title=ft.Text("添加失败", color="#043D79"),
-                content=ft.Text("请检查你的输入信息是否正确!"),
-            )
-            self.page.overlay.append(add_pwd_error_dlg)
-            add_pwd_error_dlg.open = True
+            self.info_snack_bar.content.value = "添加失败! 请检查你的输入信息是否正确!"
+            self.info_snack_bar.open = True
             self.page.update()
+            self.page.close(self)
+            self.page.overlay.remove(self)
 
 
 # 密码信息类
@@ -530,7 +535,7 @@ class PwdRow(ft.DataRow):
 class MainPage(ft.Column):
     def __init__(self, current_user, current_key, page):
         super().__init__()
-        self.page2 = page
+        self.page = page
         self.current_user = current_user
         self.current_key = current_key
         # 添加密码按钮
@@ -645,116 +650,119 @@ class MainPage(ft.Column):
                 )
                 self.pwd_table.rows.append(pwd_info)
 
-            # 密码数据导入文件路径
-            self.local_file_path = ""
-            # 密码数据导出目录路径
-            self.local_dir_path = ""
-            # 目录选择弹窗
-            self.get_directory_dialog = ft.FilePicker(on_result=self.get_directory_result)
-            # 文件选择弹窗
-            self.pick_files_dialog = ft.FilePicker(on_result=self.pick_files_result)
-            self.page2.overlay.extend([self.get_directory_dialog, self.pick_files_dialog])
-            # 底部信息弹窗
-            self.info_snack_bar = ft.SnackBar(ft.Text(), duration=2000)
-            # 导出密码信息弹窗
-            self.choose_export_dlg = ft.AlertDialog(
-                title=ft.Text("导出所有密码数据", color="#043D79"),
-                content=ft.Column(
-                    [
-                        ft.Row(
-                            [
-                                ft.TextField(
-                                    label="目录",
-                                    hint_text="请选择保存目录",
-                                    max_lines=1,
-                                    width=280,
-                                    height=55,
-                                    autofocus=True,
-                                ),
-                                ft.IconButton(
-                                    icon=ft.icons.CREATE_NEW_FOLDER,
-                                    icon_size=40,
-                                    on_click=lambda _: self.get_directory_dialog.get_directory_path(
-                                        dialog_title="选择一个保存目录", )
-                                )
-                            ],
-                            spacing=10
-                        ),
-                        ft.Dropdown(
-                            width=280,
-                            label="导出格式",
-                            hint_text="请选择加密方式",
-                            options=[
-                                ft.dropdown.Option("JSON"),
-                                ft.dropdown.Option("CSV"),
-                                ft.dropdown.Option("TXT"),
-                            ],
-                        ),
-                    ],
-                    width=350,
-                    height=180,
-                    spacing=20,
-                    alignment=ft.MainAxisAlignment.CENTER
-                ),
-                actions=[
-                    ft.OutlinedButton(
-                        text="导出",
-                        on_click=self.export_pwd_dlg_save
+        # 密码数据导入文件路径
+        self.local_file_path = ""
+        # 密码数据导出目录路径
+        self.local_dir_path = ""
+        # 目录选择弹窗
+        self.get_directory_dialog = ft.FilePicker(on_result=self.get_directory_result)
+        # 文件选择弹窗
+        self.pick_files_dialog = ft.FilePicker(on_result=self.pick_files_result)
+        self.page.overlay.extend([self.get_directory_dialog, self.pick_files_dialog])
+        # 底部信息弹窗
+        self.info_snack_bar = ft.SnackBar(ft.Text(), duration=2000)
+        self.page.overlay.append(self.info_snack_bar)
+        # 导出密码信息弹窗
+        self.choose_export_dlg = ft.AlertDialog(
+            title=ft.Text("导出所有密码数据", color="#043D79"),
+            content=ft.Column(
+                [
+                    ft.Row(
+                        [
+                            ft.TextField(
+                                label="目录",
+                                hint_text="请选择保存目录",
+                                max_lines=1,
+                                width=280,
+                                height=55,
+                                autofocus=True,
+                            ),
+                            ft.IconButton(
+                                icon=ft.icons.CREATE_NEW_FOLDER,
+                                icon_size=40,
+                                on_click=lambda _: self.get_directory_dialog.get_directory_path(
+                                    dialog_title="选择一个保存目录", )
+                            )
+                        ],
+                        spacing=10
                     ),
-                    ft.OutlinedButton(
-                        text="取消",
-                        on_click=self.export_pwd_dlg_cancel
+                    ft.Dropdown(
+                        width=280,
+                        label="导出格式",
+                        hint_text="请选择加密方式",
+                        options=[
+                            ft.dropdown.Option("JSON"),
+                            ft.dropdown.Option("CSV"),
+                            ft.dropdown.Option("TXT"),
+                        ],
                     ),
                 ],
-                modal=True
-            )
-            # 导入密码信息弹窗
-            self.choose_import_dlg = ft.AlertDialog(
-                title=ft.Text("导入密码数据", color="#043D79"),
-                content=ft.Column(
-                    [
-                        ft.Row(
-                            [
-                                ft.TextField(
-                                    label="文件",
-                                    hint_text="请选择文件路径",
-                                    max_lines=1,
-                                    width=280,
-                                    height=55,
-                                    autofocus=True,
-                                ),
-                                ft.IconButton(
-                                    icon=ft.icons.FILE_PRESENT_ROUNDED,
-                                    icon_size=40,
-                                    on_click=lambda _: self.pick_files_dialog.pick_files(allow_multiple=False),
-                                )
-                            ],
-                            spacing=10
-                        ),
-                    ],
-                    width=350,
-                    height=100,
-                    spacing=20,
-                    alignment=ft.MainAxisAlignment.CENTER
+                width=350,
+                height=180,
+                spacing=20,
+                alignment=ft.MainAxisAlignment.CENTER
+            ),
+            actions=[
+                ft.OutlinedButton(
+                    text="导出",
+                    on_click=self.export_pwd_dlg_save
                 ),
-                actions=[
-                    ft.OutlinedButton(
-                        text="导入",
-                        on_click=self.import_pwd_dlg_save
-                    ),
-                    ft.OutlinedButton(
-                        text="取消",
-                        on_click=self.import_pwd_dlg_cancel
+                ft.OutlinedButton(
+                    text="取消",
+                    on_click=self.export_pwd_dlg_cancel
+                ),
+            ],
+            modal=True
+        )
+        # 导入密码信息弹窗
+        self.choose_import_dlg = ft.AlertDialog(
+            title=ft.Text("导入密码数据", color="#043D79"),
+            content=ft.Column(
+                [
+                    ft.Row(
+                        [
+                            ft.TextField(
+                                label="文件",
+                                hint_text="请选择文件路径",
+                                max_lines=1,
+                                width=280,
+                                height=55,
+                                autofocus=True,
+                            ),
+                            ft.IconButton(
+                                icon=ft.icons.FILE_PRESENT_ROUNDED,
+                                icon_size=40,
+                                on_click=lambda _: self.pick_files_dialog.pick_files(allow_multiple=False),
+                            )
+                        ],
+                        spacing=10
                     ),
                 ],
-                modal=True
-            )
+                width=350,
+                height=100,
+                spacing=20,
+                alignment=ft.MainAxisAlignment.CENTER
+            ),
+            actions=[
+                ft.OutlinedButton(
+                    text="导入",
+                    on_click=self.import_pwd_dlg_save
+                ),
+                ft.OutlinedButton(
+                    text="取消",
+                    on_click=self.import_pwd_dlg_cancel
+                ),
+            ],
+            modal=True
+        )
+        # 在页面中添加导入导出弹窗控件
+        self.page.overlay.extend([self.choose_export_dlg, self.choose_import_dlg])
 
     # 添加密码按钮点击事件
     def btn_add_pwd_click(self, e):
         # 创建添加密码信息弹窗对象
         add_pwd_dlg = AddPwdDialog(self.current_user, self.current_key, self.pwd_table.rows, self.delete_pwd_row,
-                                   self.copy_cell)
+                                   self.copy_cell, self.info_snack_bar)
         self.page.overlay.append(add_pwd_dlg)
         add_pwd_dlg.open = True
         self.page.update()
@@ -783,12 +791,8 @@ class MainPage(ft.Column):
                 self.pwd_table.rows.append(pwd_info)
             self.page.update()
         else:
-            search_pwd_error_dlg = ft.AlertDialog(
-                title=ft.Text("搜索失败", color="#043D79"),
-                content=ft.Text("未找到相关信息!"),
-            )
-            self.page.overlay.append(search_pwd_error_dlg)
-            search_pwd_error_dlg.open = True
+            self.info_snack_bar.content.value = "搜索失败! 未找到相关信息!"
+            self.info_snack_bar.open = True
             self.page.update()
 
     # 删除密码表格信息
@@ -801,26 +805,19 @@ class MainPage(ft.Column):
             self.pwd_table.rows.remove(pwd_row)
             self.update()
         else:
-            del_pwd_error_dlg = ft.AlertDialog(
-                title=ft.Text("删除失败", color="#043D79"),
-                content=ft.Text("请检查你的操作是否正确!"),
-            )
-            self.page.overlay.append(del_pwd_error_dlg)
-            del_pwd_error_dlg.open = True
+            self.info_snack_bar.content.value = "删除失败! 请检查你的操作是否正确!"
+            self.info_snack_bar.open = True
             self.page.update()
 
     # 复制单元格内容
     def copy_cell(self, e):
         pyperclip.copy(e.control.content.value)  # 复制到剪贴板
-        copy_snack_bar = ft.SnackBar(ft.Text("复制成功!"), duration=2000)
-        self.page.overlay.append(copy_snack_bar)
-        copy_snack_bar.open = True
+        self.info_snack_bar.content.value = "复制成功!"
+        self.info_snack_bar.open = True
         self.page.update()
 
     # 导出密码点击事件
     def export_pwd_click(self, e):
-        # self.page.overlay.append(self.get_directory_dialog)
-        self.page.overlay.append(self.choose_export_dlg)
         self.choose_export_dlg.open = True
         self.page.update()
 
@@ -829,7 +826,6 @@ class MainPage(ft.Column):
         export_format = self.choose_export_dlg.content.controls[1].value
         if self.local_dir_path == "" or export_format == "":
             self.info_snack_bar.content.value = "请选择保存目录和导出格式!"
-            self.page.overlay.append(self.info_snack_bar)
             self.info_snack_bar.open = True
             self.page.update()
             return
@@ -839,26 +835,21 @@ class MainPage(ft.Column):
                                         export_format)
             if status == -1:
                 self.info_snack_bar.content.value = "导出失败!"
-                self.page.overlay.append(self.info_snack_bar)
                 self.info_snack_bar.open = True
                 self.page.update()
             else:
                 self.page.close(self.choose_export_dlg)
-                self.page.overlay.remove(self.choose_export_dlg)
                 # 清除变量
                 self.local_dir_path = ""
                 self.choose_export_dlg.content.controls[0].controls[0].value = ""
                 self.choose_export_dlg.content.controls[1].value = ""
                 self.info_snack_bar.content.value = "导出成功!"
-                self.page.overlay.append(self.info_snack_bar)
                 self.info_snack_bar.open = True
                 self.page.update()
 
     # 导出密码信息弹窗取消按钮
     def export_pwd_dlg_cancel(self, e):
-        # self.page.overlay.remove(self.get_directory_dialog)
         self.page.close(self.choose_export_dlg)
-        self.page.overlay.remove(self.choose_export_dlg)
         # 清除变量
         self.local_dir_path = ""
         self.choose_export_dlg.content.controls[0].controls[0].value = ""
@@ -868,7 +859,6 @@ class MainPage(ft.Column):
     def get_directory_result(self, e: ft.FilePickerResultEvent):
         if e.path is None:
             self.info_snack_bar.content.value = "请选择一个目录!"
-            self.page.overlay.append(self.info_snack_bar)
             self.info_snack_bar.open = True
             self.page.update()
         else:
@@ -878,8 +868,6 @@ class MainPage(ft.Column):
 
     # 导入密码点击事件
     def import_pwd_click(self, e):
-        # self.page.overlay.append(self.pick_files_dialog)
-        self.page.overlay.append(self.choose_import_dlg)
         self.choose_import_dlg.open = True
         self.page.update()
 
@@ -887,7 +875,6 @@ class MainPage(ft.Column):
     def import_pwd_dlg_save(self, e):
         if self.local_file_path == "":
             self.info_snack_bar.content.value = "请选择一个文件!"
-            self.page.overlay.append(self.info_snack_bar)
             self.info_snack_bar.open = True
             self.page.update()
             return
@@ -896,22 +883,22 @@ class MainPage(ft.Column):
             file_suffix = self.local_file_path.split(".")[-1].upper()
             if file_suffix != "JSON" and file_suffix != "CSV" and file_suffix != "TXT":
                 self.info_snack_bar.content.value = "文件格式错误!只支持JSON、CSV、TXT格式文件!"
-                self.page.overlay.append(self.info_snack_bar)
                 self.info_snack_bar.open = True
                 self.page.update()
                 return
             ok_count = 0
             error_count = 0
-            pwd_list = de.import_password(self.current_user, self.current_key, self.local_file_path, file_suffix)
+            pwd_list = de.import_password(self.current_user, self.local_file_path, file_suffix)
             if pwd_list == -1:
-                self.info_snack_bar.content.value = "导入失败!文件格式错误!"
-                self.page.overlay.append(self.info_snack_bar)
+                self.info_snack_bar.content.value = "导入失败!"
                 self.info_snack_bar.open = True
                 self.page.update()
                 return
             for pwd_info in pwd_list:
                 flag = db.insert_password(db.conn, self.current_user, pwd_info['website_name'], pwd_info['website'],
-                                          pwd_info['account'], pwd_info['password_encrypted'],
+                                          pwd_info['account'],
+                                          de.data_encrypt(pwd_info['password'], de.sha_256(self.current_key),
+                                                          pwd_info['encrypted_method']),
                                           pwd_info['encrypted_method'], pwd_info['note'])
                 created_time = db.query_password_created_at(db.conn, self.current_user, pwd_info['website_name'],
                                                             pwd_info['account'])
@@ -921,7 +908,7 @@ class MainPage(ft.Column):
                         cells=[
                             ft.DataCell(ft.Text(f"{pwd_info['website_name']}"), on_tap=self.copy_cell),
                             ft.DataCell(ft.Text(f"{pwd_info['account']}"), on_tap=self.copy_cell),
-                            ft.DataCell(ft.Text(f"{pwd_info['password_encrypted']}"), on_tap=self.copy_cell),
+                            ft.DataCell(ft.Text(f"{pwd_info['password']}"), on_tap=self.copy_cell),
                             ft.DataCell(ft.Text(f"{pwd_info['website']}"), on_tap=self.copy_cell),
                             ft.DataCell(ft.Text(f"{pwd_info['note']}"), on_tap=self.copy_cell),
                             ft.DataCell(ft.Text(f"{created_time}"), on_tap=self.copy_cell),
@@ -932,20 +919,16 @@ class MainPage(ft.Column):
                 else:
                     error_count += 1
             self.page.close(self.choose_import_dlg)
-            self.page.overlay.remove(self.choose_import_dlg)  # BUG
             # 清除变量
             self.local_file_path = ""
             self.choose_import_dlg.content.controls[0].controls[0].value = ""
             self.info_snack_bar.content.value = f"导入成功: {ok_count} 条!   导入失败: {error_count} 条!"
-            self.page.overlay.append(self.info_snack_bar)
             self.info_snack_bar.open = True
             self.page.update()
 
     # 导入密码信息弹窗取消按钮
     def import_pwd_dlg_cancel(self, e):
-        # self.page.overlay.remove(self.pick_files_dialog)
         self.page.close(self.choose_import_dlg)
-        self.page.overlay.remove(self.choose_import_dlg)
         # 清除变量
         self.local_file_path = ""
         self.choose_import_dlg.content.controls[0].controls[0].value = ""
@@ -985,7 +968,7 @@ def Register_page(page):
     page.window.min_width = 600
     page.window.min_height = 500
     # page.window.center()
-    page.add(RegisterPage())
+    page.add(RegisterPage(page))
     page.update()
     page.on_disconnect = lambda: db.close_connection(db.conn)
 
@@ -1010,7 +993,7 @@ def main(page: ft.Page):
     page.vertical_alignment = ft.MainAxisAlignment.CENTER  # 垂直居中
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER  # 水平居中
 
-    page.add(LoginPage())
+    page.add(LoginPage(page))
     page.padding = 20
     page.update()
     page.on_disconnect = lambda: db.close_connection(db.conn)

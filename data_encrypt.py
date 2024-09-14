@@ -233,8 +233,7 @@ def export_password(data: list, username, key, dir_path, export_format):
 
 
 # 导入JSON格式数据
-def import_password_from_json(username, key, file_path):
-    key = sha_256(key)
+def import_password_from_json(username, file_path):
     try:
         with open(file_path, 'r') as f:
             data = json.load(f)
@@ -248,7 +247,7 @@ def import_password_from_json(username, key, file_path):
                         'website_name': item['website_name'],
                         'website': item['website'],
                         'account': item['account'],
-                        'password_encrypted': data_encrypt(item['password'], key, item['encrypted_method']),
+                        'password': item['password'],
                         'encrypted_method': item['encrypted_method'],
                         'note': item['note'],
                         # 'created_at': item['created_at']
@@ -260,8 +259,7 @@ def import_password_from_json(username, key, file_path):
 
 
 # 导入CSV格式数据
-def import_password_from_csv(username, key, file_path):
-    key = sha_256(key)
+def import_password_from_csv(username, file_path):
     try:
         with open(file_path, 'r', encoding='UTF-8') as f:
             data = f.readlines()
@@ -276,7 +274,7 @@ def import_password_from_csv(username, key, file_path):
                         'website_name': item[1],
                         'website': item[2],
                         'account': item[3],
-                        'password_encrypted': data_encrypt(item[4], key, item[5]),
+                        'password': item[4],
                         'encrypted_method': item[5],
                         'note': item[6],
                         # 'created_at': item[7]
@@ -288,8 +286,7 @@ def import_password_from_csv(username, key, file_path):
 
 
 # 导入TXT格式数据
-def import_password_from_txt(username, key, file_path):
-    key = sha_256(key)
+def import_password_from_txt(username, file_path):
     try:
         with open(file_path, 'r', encoding='UTF-8') as f:
             data = f.readlines()
@@ -302,7 +299,7 @@ def import_password_from_txt(username, key, file_path):
                         'website_name': data[i + 2].split(': ')[1].strip(),
                         'website': data[i + 3].split(': ')[1].strip(),
                         'account': data[i + 4].split(': ')[1].strip(),
-                        'password_encrypted': data_encrypt(data[i + 5].split(': ')[1].strip(), key, data[i + 6].split(': ')[1].strip()),
+                        'password': data[i + 5].split(': ')[1].strip(),
                         'encrypted_method': data[i + 6].split(': ')[1].strip(),
                         'note': data[i + 7].split(': ')[1].strip(),
                         # 'created_at': data[i + 8].split(': ')[1].strip()
@@ -317,12 +314,12 @@ def import_password_from_txt(username, key, file_path):
 
 
 # 导入数据接口
-def import_password(username, key, file_path, import_format):
+def import_password(username, file_path, import_format):
     if import_format == 'JSON':
-        return import_password_from_json(username, key, file_path)
+        return import_password_from_json(username, file_path)
     elif import_format == 'CSV':
-        return import_password_from_csv(username, key, file_path)
+        return import_password_from_csv(username, file_path)
     elif import_format == 'TXT':
-        return import_password_from_txt(username, key, file_path)
+        return import_password_from_txt(username, file_path)
     else:
         return ERROR
