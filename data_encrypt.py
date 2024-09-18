@@ -2,8 +2,10 @@ import hashlib
 import secrets
 import string
 import json
+
 from Cryptodome.Cipher import AES, ChaCha20
 from Cryptodome.Random import get_random_bytes
+from pysm4 import encrypt_ecb, decrypt_ecb
 
 # 状态码
 OK = 1
@@ -13,10 +15,6 @@ ERROR = -1
 # 所有加密算法均使用SHA-256哈希算法PBKDF2迭代1000次生成密钥
 # 主密钥使用SHA3-256哈希算法进行加密
 
-# SHA-256
-def sha_256(data):
-    return hashlib.sha256(data.encode()).hexdigest()
-
 
 # SHA3-256
 def sha3_256(data):
@@ -24,10 +22,10 @@ def sha3_256(data):
 
 
 # PBKDF2
-# 使用sha256作为hash算法，盐值固定生成，迭代1000次，生成256位密钥
+# 使用sha256/sm3作为hash算法，盐值固定生成，迭代10000次，生成256位密钥
 def pbkdf2(data):
     salt = b'Pi3@l22_hdu&'
-    return hashlib.pbkdf2_hmac('sha256', data.encode(), salt, 1000).hex()
+    return hashlib.pbkdf2_hmac('sha256', data.encode(), salt, 10000).hex()
 
 
 # AES-256 加密
@@ -129,6 +127,32 @@ def xchacha20_decrypt(data, key):
     return cipher.decrypt(ciphertext).decode()
 
 
+# SM4 加密
+def sm4_encrypt(data, key):
+    """
+    :param data: --> 字符串
+    :param key: --> 十六进制字符串
+    :return: --> 十六进制字符串
+    """
+    # key不能超过16字节 超过截断
+    if len(key) > 16:
+        key = key[:16]
+    return encrypt_ecb(data, key)
+
+
+# SM4 解密
+def sm4_decrypt(data, key):
+    """
+    :param data: --> 十六进制字符串
+    :param key: --> 十六进制字符串
+    :return: --> 字符串
+    """
+    # key不能超过16字节 超过截断
+    if len(key) > 16:
+        key = key[:16]
+    return decrypt_ecb(data, key)
+
+
 # 随机生成强密码字符串
 def random_password(length):
     alphabet = string.ascii_letters + string.digits + string.punctuation.replace(",", "").replace(":", "")
@@ -144,6 +168,8 @@ def data_encrypt(data, key, algorithm):
         return chacha20_encrypt(data, key)
     elif algorithm == 'XChaCha20':
         return xchacha20_encrypt(data, key)
+    elif algorithm == 'SM4-ECB':
+        return sm4_encrypt(data, key)
     else:
         return None
 
@@ -156,6 +182,8 @@ def data_decrypt(data, key, algorithm):
         return chacha20_decrypt(data, key)
     elif algorithm == 'XChaCha20':
         return xchacha20_decrypt(data, key)
+    elif algorithm == 'SM4-ECB':
+        return sm4_decrypt(data, key)
     else:
         return None
 

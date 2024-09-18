@@ -36,8 +36,10 @@ CREATE TABLE IF NOT EXISTS password (
 -- 创建例子数据
 INSERT INTO user (username, password_hash) VALUES ('admin', 'fb001dfcffd1c899f3297871406242f097aecf1a5342ccf3ebcd116146188e4b');
 INSERT INTO password (username, website_name, website, account, password_encrypted, encrypted_method, note) 
-    VALUES ('admin', 'github', 'github.com', 'github_account', '7a93c3caa82776d71f631f57df6034ee49c44671e49d59b106ceeebc1db9a62f3b3caf7f6106', 'AES-256', 'AES-256');
+    VALUES ('admin', 'github', 'github.com', 'github_account', 'c405475fa0dc6c2219a6bba76735d472b5f6bbfa0562b332f46fbc4b1128b3120a4b015a58a6', 'AES-256', 'AES-256');
 INSERT INTO password (username, website_name, website, account, password_encrypted, encrypted_method, note) 
-    VALUES ('admin', 'baidu', 'www.baidu.com', 'baidu_account', '7c273e0beed034209d0e4fc09ceb3212ae7d', 'ChaCha20', 'ChaCha20');
+    VALUES ('admin', 'baidu', 'www.baidu.com', 'baidu_account', '9358b86f9f28785c62e8252552a39bdc27b4', 'ChaCha20', 'ChaCha20');
 INSERT INTO password (username, website_name, website, account, password_encrypted, encrypted_method, note) 
-    VALUES ('admin', 'google', 'www.google.com', 'google_account', '30abd2ba0524c7248350de3381d62d0839f30fc533a05bc5f444fa4870d0', 'XChaCha20', 'XChaCha20');
+    VALUES ('admin', 'google', 'www.google.com', 'google_account', 'ae99169a796dac2744c480b1aa11541878363d256444042ed0afe92a2970', 'XChaCha20', 'XChaCha20');
+INSERT INTO password (username, website_name, website, account, password_encrypted, encrypted_method, note)
+    VALUES ('admin', 'bilibili', 'www.bilibili.com', 'bilibili_account', 'rL959Ro7xjFlpLacaKFzoA==', 'SM4-ECB', 'SM4-ECB');

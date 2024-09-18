@@ -4,6 +4,10 @@ from gvcode import VFCode
 import data_encrypt as de
 import database_op as db
 
+# 全局主题变量
+BGCOLOR = '#f0f0f0'
+THEME = ft.ThemeMode.LIGHT
+
 
 # 登录页面类
 class LoginPage(ft.Column):
@@ -48,12 +52,12 @@ class LoginPage(ft.Column):
         )
 
         # logo图片
-        self.logo_image = ft.Image(
-            # src="asset/image/lock.png",
-            src="image/lock.png",  # FIXME
-            width=100,
-            height=100,
-        )
+        # self.logo_image = ft.Image(
+        #     # src="asset/image/lock.png",
+        #     src="image/lock.png",
+        #     width=100,
+        #     height=100,
+        # )
 
         # 用户名和密码输入框
         self.password_box = ft.TextField(
@@ -99,11 +103,11 @@ class LoginPage(ft.Column):
 
         # 登录事件错误弹窗
         self.w_pwd_dlg = ft.AlertDialog(
-            title=ft.Text("用户名或密码错误", color="#043D79"),
+            title=ft.Text("用户名或密码错误", weight=ft.FontWeight.BOLD),
             content=ft.Text("请检查你的用户名和密码是否正确!"),
         )
         self.w_no_user_dlg = ft.AlertDialog(
-            title=ft.Text("用户名或密码为空", color="#043D79"),
+            title=ft.Text("用户名或密码为空", weight=ft.FontWeight.BOLD),
             content=ft.Text("请输入你的用户名和密码!"),
         )
         # 在页面上添加弹窗
@@ -119,7 +123,8 @@ class LoginPage(ft.Column):
             ),
             ft.Row(
                 [
-                    self.logo_image,
+                    # self.logo_image,
+                    ft.Icon(name=ft.icons.LOCK, size=100, color=ft.colors.BLUE),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
@@ -188,7 +193,7 @@ class RegisterPage(ft.Column):
         self.code = vc.code
         vc.save(f"{self.code}.png")
         # 标题
-        self.title = ft.Text("注册用户", color='#043D79', size=40, weight=ft.FontWeight.BOLD)
+        self.title = ft.Text("注册用户", size=40, weight=ft.FontWeight.BOLD)  # color='#043D79'
         # 用户名和密码输入框
         self.password_box = ft.TextField(
             label="主密码",
@@ -286,20 +291,20 @@ class RegisterPage(ft.Column):
 
         # 注册事件错误弹窗
         self.w_register_dlg = ft.AlertDialog(
-            title=ft.Text("用户名已存在", color="#043D79"),
+            title=ft.Text("用户名已存在", weight=ft.FontWeight.BOLD),
             content=ft.Text("请重新输入用户名！"),
         )
         self.w_vf_code_dlg = ft.AlertDialog(
-            title=ft.Text("验证码错误", color="#043D79"),
+            title=ft.Text("验证码错误", weight=ft.FontWeight.BOLD),
             content=ft.Text("请重新输入验证码！"),
         )
         self.w_no_user_dlg = ft.AlertDialog(
-            title=ft.Text("用户名和密码为空", color="#043D79"),
+            title=ft.Text("用户名和密码为空", weight=ft.FontWeight.BOLD),
             content=ft.Text("请输入用户名和密码！"),
         )
         # 注册成功弹窗
         self.register_success_dlg = ft.AlertDialog(
-            title=ft.Text("注册成功", color="#043D79"),
+            title=ft.Text("注册成功", weight=ft.FontWeight.BOLD),
             content=ft.Text("请继续完成登录操作"),
         )
         # 在页面上添加弹窗
@@ -355,7 +360,7 @@ class AddPwdDialog(ft.AlertDialog):
         self.copy_cell = copy_cell
         self.info_snack_bar = info_snack_bar
         self.modal = True
-        self.title = ft.Text("添加新密码信息", color="#043D79")
+        self.title = ft.Text("添加新密码信息", weight=ft.FontWeight.BOLD)
         self.content = ft.Column(
             [
                 ft.TextField(
@@ -365,6 +370,7 @@ class AddPwdDialog(ft.AlertDialog):
                     width=500,
                     height=55,
                     autofocus=True,
+                    on_submit=lambda e: self.content.controls[1].focus(),
                 ),
                 ft.TextField(
                     label="账号",
@@ -372,6 +378,7 @@ class AddPwdDialog(ft.AlertDialog):
                     max_lines=1,
                     width=500,
                     height=55,
+                    on_submit=lambda e: self.content.controls[2].focus(),
                 ),
                 ft.TextField(
                     label="密码",
@@ -379,6 +386,7 @@ class AddPwdDialog(ft.AlertDialog):
                     max_lines=1,
                     width=500,
                     height=55,
+                    on_submit=lambda e: self.content.controls[3].focus(),
                 ),
                 ft.TextField(
                     label="网址",
@@ -387,6 +395,7 @@ class AddPwdDialog(ft.AlertDialog):
                     width=500,
                     height=55,
                     prefix_text="https://",
+                    on_submit=lambda e: self.content.controls[4].focus(),
                 ),
                 ft.TextField(
                     label="备注",
@@ -403,6 +412,7 @@ class AddPwdDialog(ft.AlertDialog):
                         ft.dropdown.Option("AES-256"),
                         ft.dropdown.Option("ChaCha20"),
                         ft.dropdown.Option("XChaCha20"),
+                        ft.dropdown.Option("SM4-ECB"),
                     ],
                 ),
             ],
@@ -503,7 +513,7 @@ class PwdRow(ft.DataRow):
 
         # 删除密码信息弹窗
         self.del_dlg = ft.AlertDialog(
-            title=ft.Text("删除密码信息", color="#043D79"),
+            title=ft.Text("删除密码信息", weight=ft.FontWeight.BOLD),
             content=ft.Text("你确定要删除这条密码信息吗?"),
             actions=[
                 ft.OutlinedButton(
@@ -579,12 +589,29 @@ class MainPage(ft.Column):
             on_click=self.export_pwd_click,
         )
 
+        # BUG
+        # 退出当前用户按钮
+        self.btn_logout = ft.IconButton(
+            icon=ft.icons.LOGOUT,
+            icon_size=50,
+            tooltip="退出当前用户",
+            on_click=lambda _: main(self.page),
+        )
+
+        # 切换明暗模式按钮
+        self.btn_change_theme = ft.IconButton(
+            icon=ft.icons.CHANGE_CIRCLE_OUTLINED,
+            icon_size=50,
+            tooltip="切换明暗模式",
+            on_click=lambda _: change_theme(self.page),
+        )
+
         # 密码信息表
         self.pwd_table = ft.DataTable(
             width=1100,
             bgcolor='#44C0DDEE',
             border_radius=20,
-            heading_text_style=ft.TextStyle(color="#043D79", weight=ft.FontWeight.BOLD, size=16),
+            heading_text_style=ft.TextStyle(weight=ft.FontWeight.W_900, size=16),  # color="#043D79"
             # column_spacing=20,
             columns=[
                 ft.DataColumn(ft.Text("名称")),
@@ -615,11 +642,13 @@ class MainPage(ft.Column):
         self.controls = [
             ft.Row(
                 [
+                    self.btn_change_theme,
                     self.btn_add_pwd,
                     self.search_box,
                     self.btn_search,
                     self.btn_import,
                     self.btn_export,
+                    self.btn_logout,
                 ],
                 alignment=ft.MainAxisAlignment.CENTER
             ),
@@ -667,7 +696,7 @@ class MainPage(ft.Column):
         self.page.overlay.append(self.info_snack_bar)
         # 导出密码信息弹窗
         self.choose_export_dlg = ft.AlertDialog(
-            title=ft.Text("导出所有密码数据", color="#043D79"),
+            title=ft.Text("导出所有密码数据", weight=ft.FontWeight.BOLD),
             content=ft.Column(
                 [
                     ft.Row(
@@ -719,7 +748,7 @@ class MainPage(ft.Column):
         )
         # 导入密码信息弹窗
         self.choose_import_dlg = ft.AlertDialog(
-            title=ft.Text("导入密码数据", color="#043D79"),
+            title=ft.Text("导入密码数据", weight=ft.FontWeight.BOLD),
             content=ft.Column(
                 [
                     ft.Row(
@@ -950,14 +979,30 @@ class MainPage(ft.Column):
             self.page.update()
 
 
+# 切换明暗主题
+def change_theme(page):
+    global BGCOLOR, THEME
+    if page.theme_mode == ft.ThemeMode.LIGHT:
+        BGCOLOR = "#050D18"
+        THEME = ft.ThemeMode.DARK
+        page.bgcolor = BGCOLOR
+        page.theme_mode = THEME
+    else:
+        BGCOLOR = "#f0f0f0"
+        THEME = ft.ThemeMode.LIGHT
+        page.bgcolor = BGCOLOR
+        page.theme_mode = THEME
+    page.update()
+
+
 # 主页面
 def main_page(page, current_user, current_key):
     page.clean()
     # page.vertical_alignment = ft.MainAxisAlignment.CENTER  # 垂直居中
-    page.window.height = 700
-    page.window.min_height = 700
+    # page.window.min_height = 700
+    # page.window.min_width = 1200
     page.window.width = 1200
-    page.window.min_width = 1200
+    page.window.height = 700
     page.window.center()
     page.add(MainPage(current_user, current_key, page))
     page.update()
@@ -967,10 +1012,10 @@ def main_page(page, current_user, current_key):
 # 注册界面
 def Register_page(page):
     page.clean()
-    page.window.width = 600
-    page.window.height = 500
     page.window.min_width = 600
     page.window.min_height = 500
+    page.window.width = 600
+    page.window.height = 500
     # page.window.center()
     page.add(RegisterPage(page))
     page.update()
@@ -982,16 +1027,17 @@ def main(page: ft.Page):
     page.clean()
     page.title = "密码管理器"
     page.window.bgcolor = ft.colors.TRANSPARENT
-    page.bgcolor = "#f0f0f0"
+    page.bgcolor = BGCOLOR
     page.window.frameless = False
-    page.window.width = 600
-    page.window.height = 500
     page.window.min_width = 600
     page.window.min_height = 500
+    page.window.width = 600
+    page.window.height = 500
+    page.update()
     page.auto_scroll = True
     page.scroll = "AUTO"
     page.window.center()
-    page.theme_mode = ft.ThemeMode.LIGHT
+    page.theme_mode = THEME
     page.theme = ft.theme.Theme(color_scheme_seed='blue', font_family='source')
     page.fonts = {'source': 'https://www.unpkg.com/font-online/fonts/SourceHanSans/SourceHanSans-Normal.otf'}
     page.vertical_alignment = ft.MainAxisAlignment.CENTER  # 垂直居中

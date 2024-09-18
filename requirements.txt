@@ -1,5 +1,7 @@
-flet~=0.24.1
+flet
 pyperclip
 gvcode
 pycryptodomex
 mysql-connector
+mysql
+pysm4
