@@ -3,5 +3,4 @@ pyperclip
 gvcode
 pycryptodomex
 mysql-connector
-mysql
 pysm4
