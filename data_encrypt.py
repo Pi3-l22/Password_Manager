@@ -10,7 +10,7 @@ OK = 1
 ERROR = -1
 
 
-# 所有加密算法均使用SHA-256哈希算法生成密钥
+# 所有加密算法均使用SHA-256哈希算法PBKDF2迭代1000次生成密钥
 # 主密钥使用SHA3-256哈希算法进行加密
 
 # SHA-256
@@ -21,6 +21,13 @@ def sha_256(data):
 # SHA3-256
 def sha3_256(data):
     return hashlib.sha3_256(data.encode()).hexdigest()
+
+
+# PBKDF2
+# 使用sha256作为hash算法，盐值固定生成，迭代1000次，生成256位密钥
+def pbkdf2(data):
+    salt = b'Pi3@l22_hdu&'
+    return hashlib.pbkdf2_hmac('sha256', data.encode(), salt, 1000).hex()
 
 
 # AES-256 加密
@@ -155,7 +162,8 @@ def data_decrypt(data, key, algorithm):
 
 # 获取密码信息数据导出成json格式数据
 def export_password_to_json(data: list, username, key, dir_path):
-    key = sha_256(key)
+    # key = sha_256(key)
+    key = pbkdf2(key)
     pwd_info_list = []
     try:
         for item in data:
@@ -181,7 +189,8 @@ def export_password_to_json(data: list, username, key, dir_path):
 
 # 获取密码信息数据导出成CSV格式数据
 def export_password_to_csv(data: list, username, key, dir_path):
-    key = sha_256(key)
+    # key = sha_256(key)
+    key = pbkdf2(key)
     try:
         with open(f"{dir_path}\\{username}_passwords.csv", 'w', encoding='UTF-8') as f:
             f.write('username,website_name,website,account,password,encrypted_method,note,created_at\n')
@@ -198,7 +207,8 @@ def export_password_to_csv(data: list, username, key, dir_path):
 
 # 获取密码信息数据导出成TXT格式数据
 def export_password_to_txt(data: list, username, key, dir_path):
-    key = sha_256(key)
+    # key = sha_256(key)
+    key = pbkdf2(key)
     count = 1
     try:
         with open(f"{dir_path}\\{username}_passwords.txt", 'w', encoding='UTF-8') as f:

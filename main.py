@@ -49,7 +49,8 @@ class LoginPage(ft.Column):
 
         # logo图片
         self.logo_image = ft.Image(
-            src="./asset/image/lock.png",
+            # src="asset/image/lock.png",
+            src="image/lock.png",  # FIXME
             width=100,
             height=100,
         )
@@ -455,7 +456,8 @@ class AddPwdDialog(ft.AlertDialog):
             self.page.update()
             return
         # 数据加密
-        password_encrypted = de.data_encrypt(password, de.sha_256(self.current_key), encrypted_method)
+        # password_encrypted = de.data_encrypt(password, de.sha_256(self.current_key), encrypted_method)
+        password_encrypted = de.data_encrypt(password, de.pbkdf2(self.current_key), encrypted_method)
         # 数据库操作
         status = db.insert_password(db.conn, self.current_user, website_name, website, account, password_encrypted,
                                     encrypted_method, note)
@@ -635,7 +637,8 @@ class MainPage(ft.Column):
         pwd_list = db.query_password(db.conn, self.current_user)
         if pwd_list is not None:
             for pwd in pwd_list:
-                key = de.sha_256(self.current_key)
+                # key = de.sha_256(self.current_key)
+                key = de.pbkdf2(self.current_key)
                 password = de.data_decrypt(pwd['password_encrypted'], key, pwd['encrypted_method'])
                 pwd_info = PwdRow(
                     cells=[
@@ -775,7 +778,8 @@ class MainPage(ft.Column):
         if pwd_list is not None:
             self.pwd_table.rows.clear()
             for pwd in pwd_list:
-                key = de.sha_256(self.current_key)
+                # key = de.sha_256(self.current_key)
+                key = de.pbkdf2(self.current_key)
                 password = de.data_decrypt(pwd['password_encrypted'], key, pwd['encrypted_method'])
                 pwd_info = PwdRow(
                     cells=[
@@ -897,7 +901,7 @@ class MainPage(ft.Column):
             for pwd_info in pwd_list:
                 flag = db.insert_password(db.conn, self.current_user, pwd_info['website_name'], pwd_info['website'],
                                           pwd_info['account'],
-                                          de.data_encrypt(pwd_info['password'], de.sha_256(self.current_key),
+                                          de.data_encrypt(pwd_info['password'], de.pbkdf2(self.current_key),
                                                           pwd_info['encrypted_method']),
                                           pwd_info['encrypted_method'], pwd_info['note'])
                 created_time = db.query_password_created_at(db.conn, self.current_user, pwd_info['website_name'],
@@ -1004,3 +1008,9 @@ try:
     ft.app(target=main, assets_dir="asset")
 except Exception:
     db.close_connection(db.conn)
+
+# 打包命令
+# flet pack main.py --add-data "asset;asset" --icon "D:\Desktop\PassWordManager\asset\logo.ico"
+#  --product-name "PassManager"  --product-version "1.0" --file-version "1.0"
+#  --file-description "A simple and safe password manager"
+#  --copyright "By LiuChao"
