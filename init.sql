@@ -21,9 +21,9 @@ CREATE TABLE IF NOT EXISTS user (
 -- 创建密码表
 CREATE TABLE IF NOT EXISTS password (
     username VARCHAR(255) NOT NULL,
-    website_name VARCHAR(150) NOT NULL,
-    website VARCHAR(150),
-    account VARCHAR(150) NOT NULL,
+    website_name VARCHAR(255) NOT NULL,
+    website VARCHAR(255),
+    account VARCHAR(255) NOT NULL,
     password_encrypted VARCHAR(255) NOT NULL,
     encrypted_method VARCHAR(50) NOT NULL,
     note TEXT,

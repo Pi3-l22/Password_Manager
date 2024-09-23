@@ -321,6 +321,17 @@ class RegisterPage(ft.Column):
             if self.vf_code.controls[0].value != self.code:
                 # self.page.overlay.append(self.w_vf_code_dlg)
                 self.w_vf_code_dlg.open = True
+                # 重新生成验证码
+                # 删除验证码图片
+                import os
+                if os.path.exists(f"{self.code}.png"):
+                    os.remove(f"{self.code}.png")
+                # 生成验证码
+                vc = VFCode()
+                vc.generate_digit(4)
+                self.code = vc.code
+                vc.save(f"{self.code}.png")
+                self.vf_code.controls[1].src = f"{self.code}.png"
                 self.page.update()
             else:
                 # 数据库操作
@@ -409,10 +420,10 @@ class AddPwdDialog(ft.AlertDialog):
                     label="加密方式",
                     hint_text="请选择加密方式",
                     options=[
-                        ft.dropdown.Option("AES-256"),
-                        ft.dropdown.Option("ChaCha20"),
-                        ft.dropdown.Option("XChaCha20"),
-                        ft.dropdown.Option("SM4-ECB"),
+                        ft.dropdown.Option("AES-256 (更安全)"),
+                        ft.dropdown.Option("ChaCha20 (更高效)"),
+                        ft.dropdown.Option("XChaCha20 (安全且高效)"),
+                        ft.dropdown.Option("SM4-ECB (国密算法)"),
                     ],
                 ),
             ],
