@@ -422,7 +422,7 @@ class AddPwdDialog(ft.AlertDialog):
                     options=[
                         ft.dropdown.Option("AES-256 (更安全)"),
                         ft.dropdown.Option("ChaCha20 (更高效)"),
-                        ft.dropdown.Option("XChaCha20 (安全且高效)"),
+                        ft.dropdown.Option("XChaCha20 (安全高效)"),
                         ft.dropdown.Option("SM4-ECB (国密算法)"),
                     ],
                 ),
