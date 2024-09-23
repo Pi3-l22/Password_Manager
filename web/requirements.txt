@@ -1,0 +1,6 @@
+flet
+pyperclip
+gvcode
+pycryptodomex
+mysql-connector
+pysm4

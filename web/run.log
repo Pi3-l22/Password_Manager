@@ -1,0 +1,10 @@
+nohup: ignoring input
+ERROR:asyncio:Future exception was never retrieved
+future: <Future finished exception=TypeError('<lambda>() takes 0 positional arguments but 1 was given')>
+Traceback (most recent call last):
+  File "/usr/lib/python3.9/concurrent/futures/thread.py", line 52, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/usr/local/lib/python3.9/dist-packages/flet_core/page.py", line 944, in wrapper
+    handler(*args)
+TypeError: <lambda>() takes 0 positional arguments but 1 was given
+/usr/bin/python3: Error while finding module specification for 'main.py' (ModuleNotFoundError: __path__ attribute not found on 'main' while trying to find 'main.py'). Try using 'main' instead of 'main.py' as the module name.
