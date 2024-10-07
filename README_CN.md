@@ -82,7 +82,7 @@
 
 ## 许可证
 
-本项目采用MIT许可证 - 详情请见[MITLICENSE](LICENSE)文件。
+本项目采用MIT许可证 - 详情请见[MIT LICENSE](LICENSE)文件。
 
 ## 致谢
 
