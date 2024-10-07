@@ -82,7 +82,7 @@ After running the program, access the Web application by visiting `http://IP:800
 
 ## License
 
-This project is licensed under the MIT License - see the [MITLICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [MIT LICENSE](LICENSE) file for details.
 
 ## Acknowledgements
 
