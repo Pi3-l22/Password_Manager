@@ -28,7 +28,7 @@ For a detailed project description, please visit my blog: [Pi3'Notes](https://bl
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/password-manager.git
+   git clone https://github.com/Pi3-l22/Password_Manager.git
    ```
 
 2. Install required dependencies:
