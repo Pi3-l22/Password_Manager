@@ -28,7 +28,7 @@
 
 1. 克隆仓库：
    ```
-   git clone https://github.com/yourusername/password-manager.git
+   git clone https://github.com/Pi3-l22/Password_Manager.git
    ```
 
 2. 安装所需依赖：
