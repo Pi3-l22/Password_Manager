@@ -4,7 +4,7 @@
 
 A secure and user-friendly password management application built with Python and Flet.
 
-For a detailed project description, please visit my blog: [Pi3'Notes](https://blog.pi3.fun/post/2024/09/%E5%AF%86%E7%A0%81%E7%AE%A1%E7%90%86%E5%99%A8%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/)
+For a detailed project description, please visit my blog: [Pi3's Notes](https://blog.pi3.fun/post/2024/09/%E5%AF%86%E7%A0%81%E7%AE%A1%E7%90%86%E5%99%A8%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/)
 
 ## Features
 
